@@ -1,0 +1,172 @@
+#importing required packages and modules
+
+from chatterbot import ChatBot
+from chatterbot.trainers import ListTrainer
+from tkinter import *
+import time
+import speech_recognition as sr
+import webbrowser
+import socket
+chrome="C:/Program Files/Google/Chrome/Application/chrome.exe %s"
+t=time.localtime()
+r = sr.Recognizer()
+bot = ChatBot("My Bot")
+
+convo = [
+    "Hello",
+    "Hi there",
+    "How you're doing?",
+    "Can I ask you some questions?",
+    "Sure, why not?",
+    "I'm doing fine these days",
+    "How can I help you?",
+    "Who's your developer?",
+    "Vishal Gupta is my developer",
+    "Which language has been used to develop you?",
+    "I have been developed using Python",
+    "What's your name?",
+    "My name is Carl",
+    "In which city , you live?",
+    "I live in Ghaziabad",
+    "Which is your favourite sport?",
+    "Cricket. I love Test Cricket",
+    "Who is known as the God of Cricket?"
+    "Master Blaster Sachin Tendulkar is known as the God of Cricket"
+    "Which college I've graduated from???"
+    "GL Bajaj Institute of Technology"
+ ]
+shutdown=['close', 'shutdown' , 'exit' , 'bye' ]
+
+
+trainer = ListTrainer(bot)
+trainer.train(convo)
+
+#main_window_attributes
+
+main=Tk()
+
+main.geometry("318x400")
+main.title("Carl : Your Own Personal Assistant")
+main.configure(bg="black")
+main.resizable(False,False)
+
+frame=Frame(main ,borderwidth=0 ,highlightthickness=0)
+
+mic=PhotoImage(file="mic.png")
+
+
+def is_connected():
+    try:
+        socket.create_connection(("1.1.1.1", 53))
+        return True
+    except OSError:
+        pass
+    return False
+
+
+#Voice input processing
+
+def ask():
+    canvas.configure(yscrollcommand=sc.set)
+    if(is_connected()):
+        pass
+    else:
+        status = Label(chat_window, text="Carl is offline", bg="red", fg="white")
+        status.pack(padx=(130, 90) , pady=3)
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        return
+
+
+
+    with sr.Microphone() as source:
+
+        audio = r.listen(source)
+
+        try:
+
+            query = r.recognize_google(audio).lower()
+            chat = Label(chat_window, text=query, justify=RIGHT, bg="DodgerBlue3", fg="white",wraplength=130)
+            chat.pack(side=TOP, anchor="ne",ipady=1 , padx=(130,2) , pady=8)
+
+
+            if "time" in query:
+
+                chat = Label(chat_window, text="Current time is " + time.strftime("%H:%M:%S", t), justify=LEFT,
+                             bg="gray15", fg="white")
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=7)
+
+            elif "weather" in query:
+                chat = Label(chat_window, text="Here are some results from Google" , justify=LEFT,
+                             bg="gray15", fg="white")
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=7)
+
+                city=list(query.split(" "))
+                result="https://www.google.com/search?q=weather+of+"+city[len(city)-1]
+                webbrowser.get(chrome).open_new(result)
+
+            elif "score" in query:
+
+                chat = Label(chat_window, text="Showing scores for some major \n sporting events.... ", justify=LEFT,
+                             bg="gray15", fg="white")
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=7)
+
+                webbrowser.get(chrome).open_new("https://www.google.com/search?q=cricket+score")
+
+            elif "weekday" in query:
+
+                chat = Label(chat_window, text="Today is " + time.strftime("%A", t), justify=LEFT,
+                             bg="gray15", fg="white")
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=7)
+
+
+            elif "google" in query:
+
+                chat = Label(chat_window, text="Here are some results from Google.....", justify=LEFT, bg="gray15",
+                             fg="white")
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=5)
+                query=query.replace("google","")
+                webbrowser.get(chrome).open_new("https://www.google.com/search?q="+query)
+
+            else:
+                answer = bot.get_response(query)
+                chat=Label(chat_window,text=str(answer).capitalize() , bg="gray19", fg="white",wraplength=130)
+                chat.pack(side=TOP, anchor="nw", padx=5, pady=5)
+
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        except:
+
+            chat=Label(chat_window,text="Sorry , didn't get what you said ")
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+#Chatbox
+
+canvas=Canvas(frame,width=300 , height=300,highlightthickness=0,bg="gray13")
+canvas.pack(side=LEFT)
+
+sc=Scrollbar(frame, orient="vertical", command=canvas.yview)
+sc.pack(side=RIGHT, fill="y")
+canvas.configure(yscrollcommand=sc.set)
+
+# canvas.pack()
+
+canvas.bind("<Configure>", lambda e:canvas.configure(scrollregion=canvas.bbox("all")))
+
+chat_window = Frame(canvas,bg="gray13",width=300,height=300,highlightthickness=0)
+canvas.create_window((0,0), window=chat_window,anchor="nw")
+
+status = Label(chat_window, text="Carl is online", bg="lightgreen")
+status.pack(padx=(130,90),pady=3)
+canvas.configure(yscrollcommand=sc.set)
+
+
+frame.pack()
+
+#Search button
+
+btn = Button(main, image=mic, borderwidth=0, highlightthickness=0, command=ask, highlightcolor="black",activebackground="black")
+btn.pack(pady=20)
+
+#Main_Window
+
+main.mainloop()
